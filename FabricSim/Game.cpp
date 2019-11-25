@@ -4,7 +4,8 @@
 
 Game::Game() :
 	m_window{ sf::VideoMode{ WINDOW_WIDTH, WINDOW_HEIGHT, 32u }, "Basic Game" },
-	m_exitGame{ false }
+	m_exitGame{ false },
+	m_rope{ NO_OF_POINTS, {WINDOW_WIDTH / 2.0f, 200.0f} }
 {
 	setupShapes();
 }
@@ -60,59 +61,27 @@ void Game::update(sf::Time t_deltaTime)
 		m_window.close();
 	}
 
-	for (int i = 0; i < NO_OF_POINTS - 1; i++)
-	{
-		m_links[i].solve();
-	}
+	m_rope.update(m_walls);
 }
 
 void Game::render()
 {
 	m_window.clear();
 
-	m_lines.clear();
+	m_rope.draw(m_window);
 
-	for (int i = 0; i < NO_OF_POINTS - 1; i++)
+	for (sf::RectangleShape const& wall : m_walls)
 	{
-		m_lines.append({ {m_links[i].pointA->x + POINT_RADIUS, m_links[i].pointA->y + POINT_RADIUS }, sf::Color::White });
-		m_lines.append({ {m_links[i].pointB->x + POINT_RADIUS, m_links[i].pointB->y + POINT_RADIUS }, sf::Color::White });
-
-		m_links[i].draw(m_window);
+		m_window.draw(wall);
 	}
-
-	m_window.draw(m_lines);
 
 	m_window.display();
 }
 
 void Game::setupShapes()
 {
-	float indOffset = RESTING_DISTANCE;
-	float xOffset = (WINDOW_WIDTH / 2) - ((NO_OF_POINTS - 1) * indOffset) + POINT_RADIUS;
-	float yOffset = 200.0f;
+	sf::RectangleShape newWall({50.0f, 50.0f});
+	newWall.setPosition(400.0f, 400.0f);
 
-	for (int i = 0; i < NO_OF_POINTS - 1; i++)
-	{
-		m_points[i].accX = 0;
-		m_points[i].accY = 0.05;
-		m_points[i].x = i * indOffset + xOffset;
-		m_points[i].lastX = i * indOffset + xOffset;
-		m_points[i].y = yOffset;
-		m_points[i].lastY = yOffset;
-
-		m_links[i].pointA = &m_points[i];
-		m_links[i].pointB = &m_points[i+1];
-	}
-
-	unsigned hookIndex = NO_OF_POINTS - 1;
-
-	m_points[hookIndex].hook = true;
-	m_points[hookIndex].accX = 0;
-	m_points[hookIndex].accY = 0;
-	m_points[hookIndex].x = hookIndex * indOffset + xOffset;
-	m_points[hookIndex].lastX = hookIndex * indOffset + xOffset;
-	m_points[hookIndex].y = yOffset;
-	m_points[hookIndex].lastY = yOffset;
-	m_points[hookIndex].hookX = m_points[hookIndex].x;
-	m_points[hookIndex].hookY = m_points[hookIndex].y;
+	m_walls.push_back(newWall);
 }
